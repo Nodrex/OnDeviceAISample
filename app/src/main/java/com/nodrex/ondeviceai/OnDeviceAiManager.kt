@@ -67,6 +67,5 @@ class OnDeviceAiManager(private val context: android.content.Context) {
                 )
             )
         }
-        // Note: GenerationClient does not expose a close() method in the same way GenerativeModel instances sometimes did in alpha
     }
 }

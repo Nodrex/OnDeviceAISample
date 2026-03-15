@@ -31,7 +31,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
@@ -86,95 +85,123 @@ fun OnDeviceAiScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // --- Input Area ---
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val isBusy = resultState.status == AIStatus.LOADING_AI_MODEL ||
-                    resultState.status == AIStatus.GENERATING_ANSWER
+        val isBusy = resultState.status == AIStatus.LOADING_AI_MODEL ||
+                resultState.status == AIStatus.GENERATING_ANSWER
 
-            OutlinedTextField(
-                value = inputText,
-                onValueChange = { inputText = it },
-                modifier = Modifier.weight(1f),
-                label = { Text("Ask the On-Device AI...") },
-                enabled = !isBusy // Disable input while AI is working
-            )
-
-            IconButton(
-                onClick = {
-                    viewModel.sendPrompt(inputText)
-                    // Optional: Clear or keep input text after sending
-                    // inputText = ""
-                },
-                enabled = inputText.isNotBlank() && !isBusy
-            ) {
-                if (isBusy) {
-                    // Show a small spinner in place of the button while working
-                    CircularProgressIndicator(modifier = Modifier.padding(8.dp))
-                } else {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Send,
-                        contentDescription = "Send prompt"
-                    )
-                }
+        PromptInputArea(
+            inputText = inputText,
+            isBusy = isBusy,
+            onInputTextChanged = { inputText = it },
+            onSendClicked = {
+                viewModel.sendPrompt(inputText)
+                // inputText = ""
             }
-        }
-
-        // --- Status Display ---
-        Text(
-            text = "Status: ${formatStatus(resultState.status)}",
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Bold
         )
 
-        // --- Delay Display ---
-        val delayMs = resultState.delayMs
-        if (delayMs != null && resultState.status == AIStatus.ANSWER_READY) {
-            val (delayText, delayColor) = when {
-                delayMs < 10000 -> {
-                    "${String.format("%.1f", delayMs / 1000f)}s" to MaterialTheme.colorScheme.primary // Green/Primary as status color
-                }
-                delayMs <= 20000 -> {
-                    "${String.format("%.1f", delayMs / 1000f)}s" to Color(0xFFF57F17) // Yellow (Darker for readability)
-                }
-                else -> {
-                    "${String.format("%.1f", delayMs / 1000f)}s" to MaterialTheme.colorScheme.error // Red
-                }
-            }
+        // --- Status Display ---
+        StatusDisplay(status = resultState.status)
 
-            Text(
-                text = "Delay: $delayText",
-                style = MaterialTheme.typography.labelLarge,
-                color = delayColor,
-                fontWeight = FontWeight.Bold
-            )
-        }
+        // --- Delay Display ---
+        DelayDisplay(delayMs = resultState.delayMs, status = resultState.status)
 
         // --- Result Display ---
-        // Only show the result area if we have an answer or an error message
-        val showResultBox = resultState.status == AIStatus.ANSWER_READY ||
-                resultState.status == AIStatus.FAILED_TO_ANSWER ||
-                resultState.status == AIStatus.FAILED_TO_LOAD_AI_MODEL
+        ResultDisplay(resultState = resultState, scrollState = scrollState)
+    }
+}
 
-        if (showResultBox && resultState.answer.isNotBlank()) {
-            val textColor = if (resultState.status == AIStatus.ANSWER_READY) {
-                MaterialTheme.colorScheme.onSurface
+@Composable
+fun PromptInputArea(
+    inputText: String,
+    isBusy: Boolean,
+    onInputTextChanged: (String) -> Unit,
+    onSendClicked: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        OutlinedTextField(
+            value = inputText,
+            onValueChange = onInputTextChanged,
+            modifier = Modifier.weight(1f),
+            label = { Text("Ask the On-Device AI...") },
+            enabled = !isBusy // Disable input while AI is working
+        )
+
+        IconButton(
+            onClick = onSendClicked,
+            enabled = inputText.isNotBlank() && !isBusy
+        ) {
+            if (isBusy) {
+                // Show a small spinner in place of the button while working
+                CircularProgressIndicator(modifier = Modifier.padding(8.dp))
             } else {
-                MaterialTheme.colorScheme.error // Red text for failures
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Send,
+                    contentDescription = "Send prompt"
+                )
             }
-
-            Text(
-                text = resultState.answer,
-                fontSize = 20.sp,
-                style = MaterialTheme.typography.bodyLarge,
-                color = textColor,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(scrollState)
-            )
         }
+    }
+}
+
+@Composable
+fun StatusDisplay(status: AIStatus) {
+    Text(
+        text = "Status: ${formatStatus(status)}",
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
+        fontWeight = FontWeight.Bold
+    )
+}
+
+@Composable
+fun DelayDisplay(delayMs: Long?, status: AIStatus) {
+    if (delayMs != null && status == AIStatus.ANSWER_READY) {
+        val (delayText, delayColor) = when {
+            delayMs < 10000 -> {
+                "${String.format("%.1f", delayMs / 1000f)}s" to MaterialTheme.colorScheme.primary // Green/Primary as status color
+            }
+            delayMs <= 20000 -> {
+                "${String.format("%.1f", delayMs / 1000f)}s" to Color(0xFFF57F17) // Yellow (Darker for readability)
+            }
+            else -> {
+                "${String.format("%.1f", delayMs / 1000f)}s" to MaterialTheme.colorScheme.error // Red
+            }
+        }
+
+        Text(
+            text = "Delay: $delayText",
+            style = MaterialTheme.typography.labelLarge,
+            color = delayColor,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+fun ResultDisplay(resultState: AIResult, scrollState: androidx.compose.foundation.ScrollState) {
+    // Only show the result area if we have an answer or an error message
+    val showResultBox = resultState.status == AIStatus.ANSWER_READY ||
+            resultState.status == AIStatus.FAILED_TO_ANSWER ||
+            resultState.status == AIStatus.FAILED_TO_LOAD_AI_MODEL
+
+    if (showResultBox && resultState.answer.isNotBlank()) {
+        val textColor = if (resultState.status == AIStatus.ANSWER_READY) {
+            MaterialTheme.colorScheme.onSurface
+        } else {
+            MaterialTheme.colorScheme.error // Red text for failures
+        }
+
+        Text(
+            text = resultState.answer,
+            fontSize = 20.sp,
+            style = MaterialTheme.typography.bodyLarge,
+            color = textColor,
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(scrollState)
+        )
     }
 }
 
@@ -186,18 +213,4 @@ fun formatStatus(status: AIStatus): String {
         .replace("_", " ")
         .lowercase()
         .replaceFirstChar { it.titlecase() }
-}
-
-@Preview(showBackground = true)
-@Composable
-@SuppressWarnings("ViewModelConstructorInComposable") // Safe for dummy preview instantiation
-fun OnDeviceAiScreenPreview() {
-    OnDeviceAITheme {
-        // Creating a dummy repository and default view model just to satisfy the preview signature
-        // Passing null or dummy context isn't ideal for preview but context is required now
-        // Using LocalContext in Compose to inject it
-        val context = androidx.compose.ui.platform.LocalContext.current
-        val dumyRepo = Repository(OnDeviceAiManager(context))
-        OnDeviceAiScreen(MainViewModel(dumyRepo))
-    }
 }
