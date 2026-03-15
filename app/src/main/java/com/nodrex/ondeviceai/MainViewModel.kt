@@ -1,6 +1,6 @@
 package com.nodrex.ondeviceai
 
-import android.util.Log
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -29,7 +29,7 @@ class MainViewModel(private val repository: Repository) : ViewModel() {
         viewModelScope.launch {
             repository.observePromptExecution(prompt).collect { result ->
                 if (result.status == AIStatus.ANSWER_READY) {
-                    Log.d("OnDeviceAI", "ViewModel: Received final result and updating UI state -> ${result.answer}")
+                    Util.log("ViewModel: Received final result and updating UI state -> ${result.answer}")
                 }
                 _aiResultState.value = result
             }

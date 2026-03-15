@@ -1,6 +1,6 @@
 package com.nodrex.ondeviceai
 
-import android.util.Log
+
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onEach
 
@@ -15,7 +15,7 @@ class Repository(private val aiManager: OnDeviceAiManager) {
     fun observePromptExecution(prompt: String): Flow<AIResult> {
         return aiManager.processPrompt(prompt).onEach { result ->
             if (result.status == AIStatus.ANSWER_READY) {
-                Log.d("OnDeviceAI", "Repository: Passing final result to ViewModel -> ${result.answer}")
+                Util.log("Repository: Passing final result to ViewModel -> ${result.answer}")
             }
         }
     }

@@ -1,6 +1,6 @@
 package com.nodrex.ondeviceai
 
-import android.util.Log
+
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -45,12 +45,12 @@ class OnDeviceAiManager(private val context: android.content.Context) {
             val response = model.generateContent(prompt)
             val resultText = try {
                 // For now, we will simply use first candidate from returned results
-                response.candidates[0].toString()
+                response.candidates[0].text
             } catch (e: Exception) {
                 "Generated."
             }
 
-            Log.d("OnDeviceAI", "AiManager: Generated result ready -> $resultText")
+            Util.log("AiManager: Generated result ready -> $resultText")
 
             emit(
                 AIResult(
