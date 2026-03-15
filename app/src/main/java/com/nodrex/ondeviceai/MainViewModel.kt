@@ -26,12 +26,18 @@ class MainViewModel(private val repository: Repository) : ViewModel() {
     fun sendPrompt(prompt: String) {
         if (prompt.isBlank()) return
 
+        val startTime = System.currentTimeMillis()
+
         viewModelScope.launch {
             repository.observePromptExecution(prompt).collect { result ->
                 if (result.status == AIStatus.ANSWER_READY) {
-                    Util.log("ViewModel: Received final result and updating UI state -> ${result.answer}")
+                    val delay = System.currentTimeMillis() - startTime
+                    val finalResult = result.copy(delayMs = delay)
+                    Util.log("ViewModel: Received final result in ${delay}ms and updating UI state -> ${finalResult.answer}")
+                    _aiResultState.value = finalResult
+                } else {
+                    _aiResultState.value = result
                 }
-                _aiResultState.value = result
             }
         }
     }

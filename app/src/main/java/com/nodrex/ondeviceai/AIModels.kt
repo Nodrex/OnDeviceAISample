@@ -18,5 +18,6 @@ enum class AIStatus {
  */
 data class AIResult(
     val answer: String,
-    val status: AIStatus
+    val status: AIStatus,
+    val delayMs: Long? = null
 )

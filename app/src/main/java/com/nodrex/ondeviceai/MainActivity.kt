@@ -135,6 +135,29 @@ fun OnDeviceAiScreen(
             fontWeight = FontWeight.Bold
         )
 
+        // --- Delay Display ---
+        val delayMs = resultState.delayMs
+        if (delayMs != null && resultState.status == AIStatus.ANSWER_READY) {
+            val (delayText, delayColor) = when {
+                delayMs < 1000 -> {
+                    "${delayMs}ms" to Color(0xFF4CAF50) // Green
+                }
+                delayMs <= 2000 -> {
+                    "${String.format("%.1f", delayMs / 1000f)}s" to Color(0xFFF57F17) // Yellow (Darker for readability)
+                }
+                else -> {
+                    "${String.format("%.1f", delayMs / 1000f)}s" to Color(0xFFF44336) // Red
+                }
+            }
+
+            Text(
+                text = "Delay: $delayText",
+                style = MaterialTheme.typography.labelLarge,
+                color = delayColor,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
         // --- Result Display ---
         // Only show the result area if we have an answer or an error message
         val showResultBox = resultState.status == AIStatus.ANSWER_READY ||
