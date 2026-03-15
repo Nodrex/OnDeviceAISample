@@ -34,15 +34,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.mlkit.genai.prompt.GenerativeModel
-import com.google.mlkit.genai.common.DownloadStatus
-import com.google.mlkit.genai.common.FeatureStatus
-import com.google.mlkit.genai.prompt.Generation
 import com.nodrex.ondeviceai.ui.theme.OnDeviceAITheme
+
 // AI Models, Manager, Repository, and ViewModel have been moved to separate files.
 
 // --- Presentation UI (Activity / Compose) ---
@@ -139,14 +133,14 @@ fun OnDeviceAiScreen(
         val delayMs = resultState.delayMs
         if (delayMs != null && resultState.status == AIStatus.ANSWER_READY) {
             val (delayText, delayColor) = when {
-                delayMs < 1000 -> {
-                    "${delayMs}ms" to Color(0xFF4CAF50) // Green
+                delayMs < 10000 -> {
+                    "${String.format("%.1f", delayMs / 1000f)}s" to MaterialTheme.colorScheme.primary // Green/Primary as status color
                 }
-                delayMs <= 2000 -> {
+                delayMs <= 20000 -> {
                     "${String.format("%.1f", delayMs / 1000f)}s" to Color(0xFFF57F17) // Yellow (Darker for readability)
                 }
                 else -> {
-                    "${String.format("%.1f", delayMs / 1000f)}s" to Color(0xFFF44336) // Red
+                    "${String.format("%.1f", delayMs / 1000f)}s" to MaterialTheme.colorScheme.error // Red
                 }
             }
 
