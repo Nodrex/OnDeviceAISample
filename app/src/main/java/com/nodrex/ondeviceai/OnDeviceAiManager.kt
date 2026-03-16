@@ -150,7 +150,7 @@ class OnDeviceAiManager(private val context: android.content.Context) {
             val wrappedPrompt = """
                 Analyze the following user input: "$prompt"
                 If the user is asking to interact with the app controls, return ONLY a JSON object matching this format: {"event": "EVENT_NAME"}
-                The EVENT_NAME must be exactly one of these: [SHOW_INFO_SNACKBAR, TURN_ON_NOTIFICATIONS, SELECT_AUTO_REFRESH].
+                The EVENT_NAME must be exactly one of these: [SHOW_INFO_SNACKBAR, TURN_ON_NOTIFICATIONS, TURN_OFF_NOTIFICATIONS, ENABLE_AUTO_REFRESH, DISABLE_AUTO_REFRESH].
                 If the input is a general question and NOT a control command, answer it normally in plain text and DO NOT return JSON.
             """.trimIndent()
             

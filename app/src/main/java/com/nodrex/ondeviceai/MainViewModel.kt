@@ -80,8 +80,10 @@ class MainViewModel(private val repository: Repository) : ViewModel() {
                                 
                                 when (eventName) {
                                     "SHOW_INFO_SNACKBAR" -> triggerInfoSnackbar(fromAi = true)
-                                    "SELECT_AUTO_REFRESH" -> _isAutoRefreshChecked.value = true
+                                    "ENABLE_AUTO_REFRESH" -> _isAutoRefreshChecked.value = true
+                                    "DISABLE_AUTO_REFRESH" -> _isAutoRefreshChecked.value = false
                                     "TURN_ON_NOTIFICATIONS" -> _isNotificationsEnabled.value = true
+                                    "TURN_OFF_NOTIFICATIONS" -> _isNotificationsEnabled.value = false
                                 }
                                 // Do not show the raw JSON to the user
                                 finalAnswer = ""
