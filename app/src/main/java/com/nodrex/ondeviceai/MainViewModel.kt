@@ -34,9 +34,13 @@ class MainViewModel(private val repository: Repository) : ViewModel() {
     private val _snackbarEvent = MutableSharedFlow<String>()
     val snackbarEvent = _snackbarEvent.asSharedFlow()
 
-    fun triggerInfoSnackbar() {
+    fun triggerInfoSnackbar(fromAi: Boolean = false) {
         viewModelScope.launch {
-            _snackbarEvent.emit("This is AI core demo app")
+            if (fromAi) {
+                _snackbarEvent.emit("You asked about the info snackbar! This is an AI demo app")
+            } else {
+                _snackbarEvent.emit("This is AI core demo app")
+            }
         }
     }
 
@@ -75,7 +79,7 @@ class MainViewModel(private val repository: Repository) : ViewModel() {
                                 val eventName = jsonObject.optString("event")
                                 
                                 when (eventName) {
-                                    "SHOW_INFO_SNACKBAR" -> triggerInfoSnackbar()
+                                    "SHOW_INFO_SNACKBAR" -> triggerInfoSnackbar(fromAi = true)
                                     "SELECT_AUTO_REFRESH" -> _isAutoRefreshChecked.value = true
                                     "TURN_ON_NOTIFICATIONS" -> _isNotificationsEnabled.value = true
                                 }
