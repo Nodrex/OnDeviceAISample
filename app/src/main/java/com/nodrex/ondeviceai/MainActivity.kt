@@ -1,5 +1,6 @@
 package com.nodrex.ondeviceai
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -86,7 +87,7 @@ fun OnDeviceAiScreen(
     ) {
         // --- Input Area ---
         val isBusy = resultState.status == AIStatus.LOADING_AI_MODEL ||
-                resultState.status == AIStatus.GENERATING_ANSWER
+                resultState.status == AIStatus.ANALYZING_PROMPT
 
         PromptInputArea(
             inputText = inputText,
@@ -155,9 +156,10 @@ fun StatusDisplay(status: AIStatus) {
     )
 }
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun DelayDisplay(delayMs: Long?, status: AIStatus) {
-    if (delayMs != null && status == AIStatus.ANSWER_READY) {
+    if (delayMs != null && status == AIStatus.GENERATED_ANSWER_READY) {
         val (delayText, delayColor) = when {
             delayMs < 10000 -> {
                 "${String.format("%.1f", delayMs / 1000f)}s" to MaterialTheme.colorScheme.primary // Green/Primary as status color
@@ -182,12 +184,12 @@ fun DelayDisplay(delayMs: Long?, status: AIStatus) {
 @Composable
 fun ResultDisplay(resultState: AIResult, scrollState: androidx.compose.foundation.ScrollState) {
     // Only show the result area if we have an answer or an error message
-    val showResultBox = resultState.status == AIStatus.ANSWER_READY ||
-            resultState.status == AIStatus.FAILED_TO_ANSWER ||
+    val showResultBox = resultState.status == AIStatus.GENERATED_ANSWER_READY ||
+            resultState.status == AIStatus.FAILED_TO_GENERATE_ANSWER ||
             resultState.status == AIStatus.FAILED_TO_LOAD_AI_MODEL
 
     if (showResultBox && resultState.answer.isNotBlank()) {
-        val textColor = if (resultState.status == AIStatus.ANSWER_READY) {
+        val textColor = if (resultState.status == AIStatus.GENERATED_ANSWER_READY) {
             MaterialTheme.colorScheme.onSurface
         } else {
             MaterialTheme.colorScheme.error // Red text for failures

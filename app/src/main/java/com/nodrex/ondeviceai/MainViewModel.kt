@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 class MainViewModel(private val repository: Repository) : ViewModel() {
 
     // Internal mutable state
-    private val _aiResultState = MutableStateFlow(AIResult("", AIStatus.IDLE))
+    private val _aiResultState = MutableStateFlow(AIResult("", AIStatus.AI_IDLE))
 
     // Public immutable state consumed by Compose
     val aiResultState: StateFlow<AIResult> = _aiResultState.asStateFlow()
@@ -30,7 +30,7 @@ class MainViewModel(private val repository: Repository) : ViewModel() {
 
         viewModelScope.launch {
             repository.observePromptExecution(prompt).collect { result ->
-                if (result.status == AIStatus.ANSWER_READY) {
+                if (result.status == AIStatus.GENERATED_ANSWER_READY) {
                     val delay = System.currentTimeMillis() - startTime
                     val finalResult = result.copy(delayMs = delay)
                     Util.log("ViewModel: Received final result in ${delay}ms and updating UI state -> ${finalResult.answer}")

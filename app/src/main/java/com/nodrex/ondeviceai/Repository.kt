@@ -14,7 +14,7 @@ class Repository(private val aiManager: OnDeviceAiManager) {
      */
     fun observePromptExecution(prompt: String): Flow<AIResult> {
         return aiManager.processPrompt(prompt).onEach { result ->
-            if (result.status == AIStatus.ANSWER_READY) {
+            if (result.status == AIStatus.GENERATED_ANSWER_READY) {
                 Util.log("Repository: Passing final result to ViewModel -> ${result.answer}")
             }
         }
