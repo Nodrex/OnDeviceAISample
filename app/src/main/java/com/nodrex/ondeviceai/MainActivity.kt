@@ -36,6 +36,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
 import com.nodrex.ondeviceai.ui.theme.OnDeviceAITheme
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 
 // AI Models, Manager, Repository, and ViewModel have been moved to separate files.
 
@@ -51,12 +59,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             OnDeviceAITheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    OnDeviceAiScreen(
-                        viewModel = viewModel,
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                OnDeviceAiScreen(viewModel = viewModel)
             }
         }
     }
@@ -72,6 +75,8 @@ fun OnDeviceAiScreen(
 ) {
     // Collect the StateFlow from ViewModel into Compose state
     val resultState by viewModel.aiResultState.collectAsState()
+    val isAutoRefreshChecked by viewModel.isAutoRefreshChecked.collectAsState()
+    val isNotificationsEnabled by viewModel.isNotificationsEnabled.collectAsState()
 
     // Local state to track what the user is currently typing
     var inputText by remember { mutableStateOf("") }
@@ -79,34 +84,90 @@ fun OnDeviceAiScreen(
     // Scroll state so the results are scrollable when large
     val scrollState = rememberScrollState()
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        // --- Input Area ---
-        val isBusy = resultState.status == AIStatus.LOADING_AI_MODEL ||
-                resultState.status == AIStatus.ANALYZING_PROMPT
+    val snackbarHostState = remember { SnackbarHostState() }
 
-        PromptInputArea(
-            inputText = inputText,
-            isBusy = isBusy,
-            onInputTextChanged = { inputText = it },
-            onSendClicked = {
-                viewModel.sendPrompt(inputText)
-                // inputText = ""
-            }
+    LaunchedEffect(Unit) {
+        viewModel.snackbarEvent.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // --- Input Area ---
+            val isBusy = resultState.status == AIStatus.LOADING_AI_MODEL ||
+                    resultState.status == AIStatus.ANALYZING_PROMPT
+
+            PromptInputArea(
+                inputText = inputText,
+                isBusy = isBusy,
+                onInputTextChanged = { inputText = it },
+                onSendClicked = {
+                    viewModel.sendPrompt(inputText)
+                }
+            )
+
+            // --- Status Display ---
+            StatusDisplay(status = resultState.status)
+
+            // --- Delay Display ---
+            DelayDisplay(delayMs = resultState.delayMs, status = resultState.status)
+
+            // --- UI Controls Row (NEW) ---
+            UiControlsRow(
+                isAutoRefreshChecked = isAutoRefreshChecked,
+                isNotificationsEnabled = isNotificationsEnabled,
+                onInfoClicked = { viewModel.triggerInfoSnackbar() },
+                onAutoRefreshChanged = { viewModel.setAutoRefresh(it) },
+                onNotificationsChanged = { viewModel.setNotifications(it) }
+            )
+
+            // --- Result Display ---
+            ResultDisplay(resultState = resultState, scrollState = scrollState)
+        }
+    }
+}
+
+@Composable
+fun UiControlsRow(
+    isAutoRefreshChecked: Boolean,
+    isNotificationsEnabled: Boolean,
+    onInfoClicked: () -> Unit,
+    onAutoRefreshChanged: (Boolean) -> Unit,
+    onNotificationsChanged: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(onClick = onInfoClicked) {
+            Icon(Icons.Default.Info, contentDescription = "Info")
+        }
+        
+        Spacer(Modifier.width(8.dp))
+        
+        Text("Auto Refresh")
+        Checkbox(
+            checked = isAutoRefreshChecked,
+            onCheckedChange = onAutoRefreshChanged
         )
 
-        // --- Status Display ---
-        StatusDisplay(status = resultState.status)
-
-        // --- Delay Display ---
-        DelayDisplay(delayMs = resultState.delayMs, status = resultState.status)
-
-        // --- Result Display ---
-        ResultDisplay(resultState = resultState, scrollState = scrollState)
+        Spacer(Modifier.width(16.dp))
+        
+        Text("Notifications")
+        Switch(
+            checked = isNotificationsEnabled,
+            onCheckedChange = onNotificationsChanged
+        )
     }
 }
 

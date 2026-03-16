@@ -146,8 +146,16 @@ class OnDeviceAiManager(private val context: android.content.Context) {
         flow.emit(AIResult(answer = "", status = AIStatus.ANALYZING_PROMPT))
 
         try {
+            // Wrap the prompt to enforce our JSON UI-control schema alongside normal answering
+            val wrappedPrompt = """
+                Analyze the following user input: "$prompt"
+                If the user is asking to interact with the app controls, return ONLY a JSON object matching this format: {"event": "EVENT_NAME"}
+                The EVENT_NAME must be exactly one of these: [SHOW_INFO_SNACKBAR, TURN_ON_NOTIFICATIONS, SELECT_AUTO_REFRESH].
+                If the input is a general question and NOT a control command, answer it normally in plain text and DO NOT return JSON.
+            """.trimIndent()
+            
             // Send the prompt to the on-device model and await the output
-            val response = model.generateContent(prompt)
+            val response = model.generateContent(wrappedPrompt)
             // For now, we will simply use first candidate from returned results
             val resultText = response.candidates[0].text
 
